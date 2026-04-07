@@ -144,11 +144,18 @@ export default function ProductForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.name || !formData.mainImage) {
+      alert("Por favor, preencha o nome e adicione pelo menos a imagem principal.");
+      return;
+    }
+
     setLoading(true);
 
     try {
+      const { id: _, ...dataToSave } = formData;
       const productData = {
-        ...formData,
+        ...dataToSave,
         slug: slugify(formData.name || ""),
         createdAt: isEdit ? formData.createdAt : Date.now(),
       };
