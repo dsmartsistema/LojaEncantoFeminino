@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
@@ -14,7 +14,10 @@ import { db } from "./lib/firebase";
 import { MessageCircle } from "lucide-react";
 import { WHATSAPP_NUMBER } from "./constants";
 
-export default function App() {
+function AppContent() {
+  const location = useLocation();
+  const isUploadPage = location.pathname.startsWith("/admin/upload/");
+
   useEffect(() => {
     // Test Firestore connection
     const testConnection = async () => {
@@ -30,24 +33,24 @@ export default function App() {
   }, []);
 
   return (
-    <Router>
-      <div className="flex flex-col min-h-screen">
-        <Navbar />
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/produto/:slug" element={<ProductDetails />} />
-            <Route path="/carrinho" element={<CartPage />} />
-            <Route path="/admin" element={<Login />} />
-            <Route path="/admin/dashboard" element={<Dashboard />} />
-            <Route path="/admin/produto/novo" element={<ProductForm />} />
-            <Route path="/admin/produto/editar/:id" element={<ProductForm />} />
-            <Route path="/admin/upload/:sessionId" element={<MobileUpload />} />
-          </Routes>
-        </main>
-        <Footer />
+    <div className="flex flex-col min-h-screen">
+      {!isUploadPage && <Navbar />}
+      <main className="flex-grow">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/produto/:slug" element={<ProductDetails />} />
+          <Route path="/carrinho" element={<CartPage />} />
+          <Route path="/admin" element={<Login />} />
+          <Route path="/admin/dashboard" element={<Dashboard />} />
+          <Route path="/admin/produto/novo" element={<ProductForm />} />
+          <Route path="/admin/produto/editar/:id" element={<ProductForm />} />
+          <Route path="/admin/upload/:sessionId" element={<MobileUpload />} />
+        </Routes>
+      </main>
+      {!isUploadPage && <Footer />}
 
-        {/* Floating WhatsApp Button */}
+      {/* Floating WhatsApp Button */}
+      {!isUploadPage && (
         <a
           href={`https://wa.me/${WHATSAPP_NUMBER}`}
           target="_blank"
@@ -57,7 +60,15 @@ export default function App() {
         >
           <MessageCircle size={32} />
         </a>
-      </div>
+      )}
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }

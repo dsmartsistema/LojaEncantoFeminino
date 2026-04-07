@@ -48,28 +48,26 @@ export default function ProductForm() {
       fetchProduct();
     }
 
-    // Listen for mobile uploads
-    const unsubscribeUploads = onSnapshot(doc(db, "upload_sessions", sessionId), (doc) => {
-      if (doc.exists()) {
-        const data = doc.data();
-        if (data.urls && data.urls.length > 0) {
+    // Listen for mobile uploads in subcollection
+    const unsubscribeUploads = onSnapshot(collection(db, "upload_sessions", sessionId, "images"), (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === "added") {
+          const data = change.doc.data();
+          const url = data.url;
+          
           setFormData((prev) => {
             const currentGallery = prev.gallery || [];
-            const newUrls = data.urls.filter((url: string) => !currentGallery.includes(url));
-            
-            if (newUrls.length === 0) return prev;
+            if (currentGallery.includes(url)) return prev;
 
-            // If no main image, set the first uploaded one as main
-            const mainImage = prev.mainImage || newUrls[0];
-            
+            const mainImage = prev.mainImage || url;
             return {
               ...prev,
               mainImage,
-              gallery: [...currentGallery, ...newUrls],
+              gallery: [...currentGallery, url],
             };
           });
         }
-      }
+      });
     });
 
     return () => {
@@ -77,6 +75,45 @@ export default function ProductForm() {
       unsubscribeUploads();
     };
   }, [id, isEdit, navigate, sessionId]);
+
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 800;
+          const MAX_HEIGHT = 800;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+          resolve(dataUrl);
+        };
+        img.onerror = reject;
+      };
+      reader.onerror = reject;
+    });
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, isMain: boolean = false) => {
     const files = e.target.files;
@@ -87,10 +124,10 @@ export default function ProductForm() {
       const urls: string[] = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const storageRef = ref(storage, `products/${Date.now()}-${file.name}`);
-        const snapshot = await uploadBytes(storageRef, file);
-        const url = await getDownloadURL(snapshot.ref);
-        urls.push(url);
+        if (!file.type.startsWith("image/")) continue;
+        
+        const base64 = await compressImage(file);
+        urls.push(base64);
       }
 
       if (isMain) {
@@ -99,7 +136,7 @@ export default function ProductForm() {
         setFormData(prev => ({ ...prev, gallery: [...(prev.gallery || []), ...urls] }));
       }
     } catch (err) {
-      alert("Erro ao enviar imagem.");
+      alert("Erro ao processar imagem.");
     } finally {
       setUploading(false);
     }
@@ -331,20 +368,30 @@ export default function ProductForm() {
 
             <div className="bg-gray-50 p-6 rounded-xl flex flex-col items-center justify-center border-2 border-dashed border-gray-200">
               <QRCodeSVG value={uploadUrl} size={180} />
-              <p className="text-[10px] text-gray-400 mt-4 font-mono break-all text-center">{uploadUrl}</p>
+              <p className="text-[10px] text-gray-400 mt-4 font-mono break-all text-center max-w-full">{uploadUrl}</p>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(uploadUrl);
+                  alert("Link copiado para a área de transferência!");
+                }}
+                className="mt-4 text-accent hover:text-accent-hover text-xs font-bold flex items-center gap-1"
+              >
+                Copiar Link Manualmente
+              </button>
             </div>
 
             <div className="mt-6 space-y-4">
               <div className="flex items-start gap-3">
-                <div className="bg-primary text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold mt-0.5">1</div>
+                <div className="bg-primary text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold mt-0.5 shrink-0">1</div>
                 <p className="text-xs text-gray-600">Abra a câmera do seu celular.</p>
               </div>
               <div className="flex items-start gap-3">
-                <div className="bg-primary text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold mt-0.5">2</div>
+                <div className="bg-primary text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold mt-0.5 shrink-0">2</div>
                 <p className="text-xs text-gray-600">Escaneie o código e acesse o link.</p>
               </div>
               <div className="flex items-start gap-3">
-                <div className="bg-primary text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold mt-0.5">3</div>
+                <div className="bg-primary text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold mt-0.5 shrink-0">3</div>
                 <p className="text-xs text-gray-600">Tire as fotos e elas aparecerão aqui automaticamente.</p>
               </div>
             </div>

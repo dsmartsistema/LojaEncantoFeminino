@@ -82,7 +82,11 @@ service cloud.firestore {
 
     // Rules for Upload Sessions (Mobile to Desktop sync)
     match /upload_sessions/{sessionId} {
-      allow read, write: if true; // Temporary session access
+      allow read, write: if true;
+      
+      match /images/{imageId} {
+        allow read, write: if true;
+      }
     }
 
     // Rules for Users (Admin roles)
