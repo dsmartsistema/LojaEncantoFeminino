@@ -32,26 +32,10 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() &&
         (
+          request.auth.token.email == "eeicincosentidos@gmail.com" ||
           (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
-          request.auth.token.email.toLower() == "eeicincosentidos@gmail.com"
+           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
         );
-    }
-
-    function isValidString(field, min, max) {
-      return request.resource.data[field] is string &&
-             request.resource.data[field].size() >= min &&
-             request.resource.data[field].size() <= max;
-    }
-
-    function isValidNumber(field, min) {
-      return request.resource.data[field] is number &&
-             request.resource.data[field] >= min;
-    }
-
-    function isValidList(field, max) {
-      return request.resource.data[field] is list &&
-             request.resource.data[field].size() <= max;
     }
 
     // Rules for Categories
@@ -63,28 +47,7 @@ service cloud.firestore {
     // Rules for Products
     match /products/{productId} {
       allow read: if true;
-      allow create: if isAdmin() &&
-        isValidString('name', 1, 100) &&
-        isValidString('description', 1, 5000) &&
-        isValidNumber('price', 0) &&
-        isValidString('categoryId', 1, 50) &&
-        isValidString('mainImage', 1, 1000000) &&
-        isValidString('slug', 1, 150) &&
-        isValidNumber('createdAt', 0) &&
-        (!('gallery' in request.resource.data) || request.resource.data.gallery is list) &&
-        (!('sizes' in request.resource.data) || request.resource.data.sizes is list);
-      
-      allow update: if isAdmin() &&
-        isValidString('name', 1, 100) &&
-        isValidString('description', 1, 5000) &&
-        isValidNumber('price', 0) &&
-        isValidString('categoryId', 1, 50) &&
-        isValidString('mainImage', 1, 1000000) &&
-        isValidString('slug', 1, 150) &&
-        (!('gallery' in request.resource.data) || request.resource.data.gallery is list) &&
-        (!('sizes' in request.resource.data) || request.resource.data.sizes is list);
-
-      allow delete: if isAdmin();
+      allow write: if isAdmin();
     }
 
     // Rules for Upload Sessions (Mobile to Desktop sync)
