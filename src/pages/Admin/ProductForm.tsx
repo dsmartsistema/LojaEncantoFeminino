@@ -160,11 +160,20 @@ export default function ProductForm() {
       }
       
       // Cleanup session
-      await deleteDoc(doc(db, "upload_sessions", sessionId));
+      try {
+        await deleteDoc(doc(db, "upload_sessions", sessionId));
+      } catch (cleanupErr) {
+        console.warn("Could not cleanup session:", cleanupErr);
+      }
       
       navigate("/admin/dashboard");
-    } catch (err) {
-      alert("Erro ao salvar produto.");
+    } catch (err: any) {
+      console.error("Error saving product:", err);
+      if (err.code === 'permission-denied') {
+        alert("Erro de permissão: Você não tem autorização para salvar produtos. Verifique se seu e-mail está verificado no Firebase.");
+      } else {
+        alert(`Erro ao salvar produto: ${err.message || "Tente novamente."}`);
+      }
     } finally {
       setLoading(false);
     }

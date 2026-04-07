@@ -65,17 +65,21 @@ service cloud.firestore {
         isValidString('description', 1, 5000) &&
         isValidNumber('price', 0) &&
         isValidString('categoryId', 1, 50) &&
-        isValidString('mainImage', 1, 1000) &&
+        isValidString('mainImage', 1, 1000000) &&
         isValidString('slug', 1, 150) &&
-        isValidNumber('createdAt', 0);
+        isValidNumber('createdAt', 0) &&
+        (!('gallery' in request.resource.data) || request.resource.data.gallery is list) &&
+        (!('sizes' in request.resource.data) || request.resource.data.sizes is list);
       
       allow update: if isAdmin() &&
         isValidString('name', 1, 100) &&
         isValidString('description', 1, 5000) &&
         isValidNumber('price', 0) &&
         isValidString('categoryId', 1, 50) &&
-        isValidString('mainImage', 1, 1000) &&
-        isValidString('slug', 1, 150);
+        isValidString('mainImage', 1, 1000000) &&
+        isValidString('slug', 1, 150) &&
+        (!('gallery' in request.resource.data) || request.resource.data.gallery is list) &&
+        (!('sizes' in request.resource.data) || request.resource.data.sizes is list);
 
       allow delete: if isAdmin();
     }
