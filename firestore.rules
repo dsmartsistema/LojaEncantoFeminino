@@ -1,0 +1,89 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: categories
+    // Fields:
+    //   - name: string (required)
+    //   - slug: string (required)
+    //
+    // Collection: products
+    // Fields:
+    //   - name: string (required)
+    //   - description: string (required)
+    //   - price: number (required)
+    //   - categoryId: string (required)
+    //   - mainImage: string (required)
+    //   - gallery: list of strings
+    //   - sizes: list of strings
+    //   - slug: string (required)
+    //   - createdAt: number (required)
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "eeicincosentidos@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidString(field, min, max) {
+      return request.resource.data[field] is string &&
+             request.resource.data[field].size() >= min &&
+             request.resource.data[field].size() <= max;
+    }
+
+    function isValidNumber(field, min) {
+      return request.resource.data[field] is number &&
+             request.resource.data[field] >= min;
+    }
+
+    function isValidList(field, max) {
+      return request.resource.data[field] is list &&
+             request.resource.data[field].size() <= max;
+    }
+
+    // Rules for Categories
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Rules for Products
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if isAdmin() &&
+        isValidString('name', 1, 100) &&
+        isValidString('description', 1, 5000) &&
+        isValidNumber('price', 0) &&
+        isValidString('categoryId', 1, 50) &&
+        isValidString('mainImage', 1, 1000) &&
+        isValidString('slug', 1, 150) &&
+        isValidNumber('createdAt', 0);
+      
+      allow update: if isAdmin() &&
+        isValidString('name', 1, 100) &&
+        isValidString('description', 1, 5000) &&
+        isValidNumber('price', 0) &&
+        isValidString('categoryId', 1, 50) &&
+        isValidString('mainImage', 1, 1000) &&
+        isValidString('slug', 1, 150);
+
+      allow delete: if isAdmin();
+    }
+
+    // Rules for Users (Admin roles)
+    match /users/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if isAdmin();
+    }
+  }
+}

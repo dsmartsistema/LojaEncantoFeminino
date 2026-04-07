@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #001f3f;
+  --color-accent: #D4AF37;
+  --color-accent-hover: #B8860B;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 font-sans;
+  }
+}
+
+.gold-gradient {
+  background: linear-gradient(45deg, #D4AF37, #F7E08A, #D4AF37);
+}
+
+.dark-blue-gradient {
+  background: linear-gradient(135deg, #001f3f, #003366);
+}

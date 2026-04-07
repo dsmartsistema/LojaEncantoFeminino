@@ -1,0 +1,41 @@
+{
+  "entities": {
+    "Category": {
+      "title": "Category",
+      "description": "Product categories",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" }
+      },
+      "required": ["name", "slug"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Clothing products",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "categoryId": { "type": "string" },
+        "mainImage": { "type": "string" },
+        "gallery": { "type": "array", "items": { "type": "string" } },
+        "sizes": { "type": "array", "items": { "type": "string" } },
+        "slug": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["name", "description", "price", "categoryId", "mainImage", "slug"]
+    }
+  },
+  "firestore": {
+    "categories": {
+      "schema": "Category",
+      "description": "Collection of product categories"
+    },
+    "products": {
+      "schema": "Product",
+      "description": "Collection of products"
+    }
+  }
+}
