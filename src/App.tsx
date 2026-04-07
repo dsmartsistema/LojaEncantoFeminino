@@ -7,6 +7,7 @@ import CartPage from "./pages/CartPage";
 import Login from "./pages/Admin/Login";
 import Dashboard from "./pages/Admin/Dashboard";
 import ProductForm from "./pages/Admin/ProductForm";
+import MobileUpload from "./pages/Admin/MobileUpload";
 import { useEffect } from "react";
 import { doc, getDocFromServer } from "firebase/firestore";
 import { db } from "./lib/firebase";
@@ -41,6 +42,7 @@ export default function App() {
             <Route path="/admin/dashboard" element={<Dashboard />} />
             <Route path="/admin/produto/novo" element={<ProductForm />} />
             <Route path="/admin/produto/editar/:id" element={<ProductForm />} />
+            <Route path="/admin/upload/:sessionId" element={<MobileUpload />} />
           </Routes>
         </main>
         <Footer />

@@ -80,6 +80,11 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Rules for Upload Sessions (Mobile to Desktop sync)
+    match /upload_sessions/{sessionId} {
+      allow read, write: if true; // Temporary session access
+    }
+
     // Rules for Users (Admin roles)
     match /users/{userId} {
       allow read: if isAuthenticated() && request.auth.uid == userId;
